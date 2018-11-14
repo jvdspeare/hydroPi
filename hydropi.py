@@ -2,7 +2,6 @@ import configparser as config
 import pigpio as gpio
 # import DHT22
 import pymysql as sql
-import datetime
 import time
 from multiprocessing import Process
 
@@ -39,11 +38,12 @@ def get_temp_humid(error_msg):
             temp = dht22.temperature()
             humid = dht22.humidity()
             cursor = sql_db_connect.db.cursor()
-            statement = 'INSERT INTO TEMP_HUMID(TIME, TEMP, HUMID) VALUES ' \
-                        '(' + str(datetime.datetime.now()) + ', ' + str(temp) + ', ' + str(humid) + ')'
+            statement = "INSERT INTO TEMP_HUMID(TIME, TEMP, HUMID) VALUES ('%s', %d, %d)" % (time.time(), temp, humid)
+            print(statement)
             cursor.execute(statement)
-            sql_db_connect.db.commit
-            time.sleep(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])
+            sql_db_connect.db.commit()
+            print('done')
+            time.sleep(600)
         except:
             print(error_msg)
             time.sleep(600)
@@ -53,7 +53,7 @@ def get_temp_humid(error_msg):
 get_conf('config.ini')
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                get_conf.conf['DB']['DB_NAME'], 'Database Error222')
-setup_temp_humid(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO'], 'Sensor Error')
+# setup_temp_humid(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO'], 'Sensor Error')
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
 Process(target=get_temp_humid('Sensor Error')).start()
