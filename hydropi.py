@@ -32,17 +32,21 @@ def setup_temp_humid(gpio_num, error_msg):
 
 
 # take temperature and humidity reading then store data in database
-def get_temp_humid():
+def get_temp_humid(error_msg):
     while True:
-        dht22.trigger()
-        temp = dht22.temperature()
-        humid = dht22.humidity()
-        cursor = sql_db_connect.db.cursor()
-        statement = 'INSERT INTO TEMP_HUMID(TIME, TEMP, HUMID) VALUES ' \
-                    '(' + str(datetime.datetime.now()) + ', ' + str(temp) + ', ' + str(humid) + ')'
-        cursor.execute(statement)
-        sql_db_connect.db.commit
-        time.sleep(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])
+        try:
+            dht22.trigger()
+            temp = dht22.temperature()
+            humid = dht22.humidity()
+            cursor = sql_db_connect.db.cursor()
+            statement = 'INSERT INTO TEMP_HUMID(TIME, TEMP, HUMID) VALUES ' \
+                        '(' + str(datetime.datetime.now()) + ', ' + str(temp) + ', ' + str(humid) + ')'
+            cursor.execute(statement)
+            sql_db_connect.db.commit
+            time.sleep(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])
+        except:
+            print(error_msg)
+            time.sleep(600)
 
 
 # load config, connect to the database and setup the sensor(s)
@@ -52,7 +56,7 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
 setup_temp_humid(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO'], 'Sensor Error')
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
-Process(target=get_temp_humid()).start()
+Process(target=get_temp_humid('Sensor Error')).start()
 
 # close database connection
 sql_db_connect.db.close()
