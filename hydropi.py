@@ -52,7 +52,7 @@ def get_temp_humid(error_msg):
 # load config, connect to the database and setup the sensor(s)
 get_conf('config.ini')
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
-               get_conf.conf['DB']['DB_NAME'], 'Database Error')
+               get_conf.conf['DB']['DB_NAME'], 'Database Error222')
 setup_temp_humid(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO'], 'Sensor Error')
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
