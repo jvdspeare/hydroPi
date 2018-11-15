@@ -10,9 +10,6 @@ try:
     warnings.filterwarnings('error')
 except ModuleNotFoundError as er:
     quit(print(er))
-except ImportError as er:
-    quit(print(er))
-
 
 # load config file
 def get_conf(file_name):
