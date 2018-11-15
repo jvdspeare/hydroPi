@@ -1,15 +1,13 @@
 # import modules
-try:
-    import configparser as config
-    import pigpio as gpio
-    import DHT22
-    import pymysql as sql
-    import time
-    from multiprocessing import Process
-    import warnings
-    warnings.filterwarnings('error')
-except ModuleNotFoundError as er:
-    quit(print(er))
+import configparser as config
+import pigpio as gpio
+import DHT22
+import pymysql as sql
+import time
+from multiprocessing import Process
+import warnings
+warnings.filterwarnings('error')
+
 
 # load config file
 def get_conf(file_name):
