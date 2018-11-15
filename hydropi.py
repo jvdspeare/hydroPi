@@ -45,7 +45,7 @@ def setup_temp_humid(gpio_num):
             quit()
         dht22 = DHT22.sensor(pi, gpio_num)
         dht22.trigger()
-        time.sleep(3)
+        time.sleep(4)
     except AttributeError as e:
         quit(print(e))
 
@@ -57,7 +57,6 @@ def get_temp_humid(db_table):
             # dht22.trigger()
             # temp = dht22.temperature()
             # humid = dht22.humidity()
-            print(time.time())
             temp = 21.222
             humid = 75.222
             cursor = sql_db_connect.db.cursor()
@@ -65,7 +64,10 @@ def get_temp_humid(db_table):
             cursor.execute(q)
             sql_db_connect.db.commit()
             print('done')
-            time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
+            if int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']) >= 4:
+                time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
+            else:
+                quit(print('TEMP_HUMID_FREQ must be greater than or equal to 4'))
         except ValueError as e:
             quit(print(e))
 
@@ -74,7 +76,7 @@ def get_temp_humid(db_table):
 get_conf('config.ini')
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
-setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+# setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
 Process(target=get_temp_humid(get_conf.conf['DB']['DB_TABLE'])).start()
