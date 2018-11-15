@@ -62,7 +62,7 @@ def get_temp_humid(db_table):
             cursor.execute(q)
             sql_db_connect.db.commit()
             time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
-        except ValueError as e:
+        except sql.err.Warning as e:
             quit(print(e))
 
 
