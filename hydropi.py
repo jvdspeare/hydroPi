@@ -72,7 +72,7 @@ def get_temp_humid(db_table):
 get_conf('config.ini')
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
-# setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
 Process(target=get_temp_humid(get_conf.conf['DB']['DB_TABLE'])).start()
