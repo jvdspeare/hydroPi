@@ -34,7 +34,7 @@ def sql_db_connect(host, user, passw, db_name, db_table):
            TEMP FLOAT(3, 1) NOT NULL,
            HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
     except Warning as w:
-        print(w)
+            print(w)
 
 
 # setup temperature and humidity sensor
@@ -43,8 +43,8 @@ def setup_temp_humid(gpio_num):
         pi = gpio.pi()
         if not pi.connected:
             quit()
-        dht22 = DHT22.sensor(pi, gpio_num)
-        dht22.trigger()
+        setup_temp_humid.dht22 = DHT22.sensor(pi, gpio_num)
+        setup_temp_humid.dht22.trigger()
         time.sleep(4)
     except AttributeError as e:
         quit(print(e))
@@ -54,20 +54,15 @@ def setup_temp_humid(gpio_num):
 def get_temp_humid(db_table):
     while True:
         try:
-            # dht22.trigger()
-            # temp = dht22.temperature()
-            # humid = dht22.humidity()
-            temp = 21.222
-            humid = 75.222
+            setup_temp_humid.dht22.trigger()
+            time.sleep(4)
+            temp = setup_temp_humid.dht22.temperature()
+            humid = setup_temp_humid.dht22.humidity()
             cursor = sql_db_connect.db.cursor()
             q = "INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)" % (db_table, time.time(), temp, humid)
             cursor.execute(q)
             sql_db_connect.db.commit()
-            print('done')
-            if int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']) >= 4:
-                time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
-            else:
-                quit(print('TEMP_HUMID_FREQ must be greater than or equal to 4'))
+            time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
         except ValueError as e:
             quit(print(e))
 
