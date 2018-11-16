@@ -50,33 +50,40 @@ def setup_temp_humid(gpio_num):
 
 
 # take temperature and humidity reading then store data in database
-def get_temp_humid(db_table):
+def get_temp_humid(db_table, freq):
     while True:
-        #setup_temp_humid.dht22.trigger()
-        #time.sleep(4)
-        #temp = setup_temp_humid.dht22.temperature()
-        #humid = setup_temp_humid.dht22.humidity()
-        temp = -999
-        humid = -999
-        print(temp)
-        print(humid)
+        setup_temp_humid.dht22.trigger()
+        time.sleep(4)
+        temp = setup_temp_humid.dht22.temperature()
+        humid = setup_temp_humid.dht22.humidity()
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' % (db_table, time.time(), temp, humid))
         except sql.err.DataError as e:
-            quit(print('Check if the DHT22 sensor is connected ' + str(e)))
+            quit(print('Check if the DHT22 sensor is connected - ' + str(e)))
         sql_db_connect.db.commit()
-        time.sleep(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
+        time.sleep(freq)
 
 
-# load config, connect to the database and setup the sensor(s)
+# load config
 get_conf('config.ini')
+
+# connect to database
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
-#setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+
+# setup DHT22 sensor
+try:
+    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+except ValueError as er:
+    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
-Process(target=get_temp_humid(get_conf.conf['DB']['DB_TABLE'])).start()
+try:
+    Process(target=get_temp_humid(
+        get_conf.conf['DB']['DB_TABLE'], int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))).start()
+except ValueError as er:
+    quit(print('TEMP_HUMID_FREQ must be a number - ' + str(er)))
 
 # close database connection
 sql_db_connect.db.close()
