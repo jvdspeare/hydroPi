@@ -1,5 +1,7 @@
 # import modules
 import atexit
+import pandas as pd
+import plotly as py
 import configparser as config
 import pigpio as gpio
 import DHT22
@@ -66,6 +68,14 @@ def get_temp_humid(db_table, freq):
         time.sleep(freq)
 
 
+# plot temperature and humidity on a graph
+def graph_temp_humid(db_table):
+    cursor = sql_db_connect.db.cursor()
+    cursor.execute('SELECT TIME, TEMP, HUMID FROM %s' % db_table)
+    rows = cursor.fetchall()
+    print(rows)
+
+
 # cleanup function
 def clorox(e):
     print(e)
@@ -98,4 +108,6 @@ if __name__ == '__main__':
     except ValueError as er:
         quit(print('TEMP_HUMID_FREQ must be a number - ' + str(er)))
 
-atexit.register(clorox)
+graph_temp_humid(get_conf.conf['DB']['DB_TABLE'])
+
+atexit.register(clorox('End'))
