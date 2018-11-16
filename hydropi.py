@@ -28,23 +28,23 @@ def sql_db_connect(host, user, passw, db_name, db_table):
     cursor = sql_db_connect.db.cursor()
     try:
         cursor.execute('CREATE DATABASE IF NOT EXISTS %s;' % db_name)
-    except Warning as w:
-        print(w)
+    except Warning:
+        pass
     cursor.execute('USE %s;' % db_name)
     try:
         cursor.execute('''CREATE TABLE IF NOT EXISTS %s (
            TIME INT NOT NULL,
            TEMP FLOAT(3, 1) NOT NULL,
            HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
-    except Warning as w:
-        print(w)
+    except Warning:
+        pass
 
 
 # setup temperature and humidity sensor
 def setup_temp_humid(gpio_num):
     pi = gpio.pi()
     if not pi.connected:
-        quit()
+        quit(clorox(''))
     setup_temp_humid.dht22 = DHT22.sensor(pi, gpio_num)
     setup_temp_humid.dht22.trigger()
     time.sleep(4)
@@ -61,14 +61,18 @@ def get_temp_humid(db_table, freq):
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' % (db_table, time.time(), temp, humid))
         except sql.err.DataError as e:
-            quit(print('Check if the DHT22 sensor is connected - ' + str(e)))
+            quit(clorox('Check if the DHT22 sensor is connected - ' + str(e)))
         sql_db_connect.db.commit()
         time.sleep(freq)
 
 
 # cleanup function
-def clorox():
-    p.terminate()
+def clorox(e):
+    print(e)
+    try:
+        p.terminate()
+    except NameError:
+        pass
     sql_db_connect.db.close()
 
 
