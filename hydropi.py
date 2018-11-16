@@ -1,4 +1,5 @@
 # import modules
+import atexit
 import configparser as config
 import pigpio as gpio
 import DHT22
@@ -65,6 +66,12 @@ def get_temp_humid(db_table, freq):
         time.sleep(freq)
 
 
+# cleanup function
+def clorox():
+    p.terminate()
+    sql_db_connect.db.close()
+
+
 # load config
 get_conf('config.ini')
 
@@ -79,11 +86,12 @@ except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
-try:
-    Process(target=get_temp_humid(
-        get_conf.conf['DB']['DB_TABLE'], int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))).start()
-except ValueError as er:
-    quit(print('TEMP_HUMID_FREQ must be a number - ' + str(er)))
+if __name__ == '__main__':
+    try:
+        p = Process(target=get_temp_humid,
+                    args=(get_conf.conf['DB']['DB_TABLE'], int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
+        p.start()
+    except ValueError as er:
+        quit(print('TEMP_HUMID_FREQ must be a number - ' + str(er)))
 
-# close database connection
-sql_db_connect.db.close()
+atexit.register(clorox)
