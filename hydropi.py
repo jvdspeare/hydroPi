@@ -71,12 +71,12 @@ def get_temp_humid(db_table, freq, g_time, g_temp):
 
 
 # plot temperature and humidity on a graph using dash
-def graph():
+def graph(freq):
     app = dash.Dash()
     app.layout = html.Div(children=[
         html.H1('hydropi'),
         dcc.Graph(id='Temperature', animate=True),
-        dcc.Interval(id='update', interval=5000)])
+        dcc.Interval(id='update', interval=(freq*1000)+4000)])
 
     @app.callback(Output('Temperature', 'figure'),
                   events=[Event('update', 'interval')])
@@ -85,11 +85,8 @@ def graph():
             x=list(g_time.get()),
             y=list(g_temp.get()),
             name='scatter',
-            mode='lines+markers'
-        )
-
+            mode='lines+markers')
         return {'data': [data]}
-
     if __name__ == '__main__':
         app.run_server()
 
@@ -130,6 +127,6 @@ if __name__ == '__main__':
         quit(clorox('TEMP_HUMID_FREQ must be a number - ' + str(er)))
 
 # start dash
-graph()
+graph(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']))
 
 # atexit.register(clorox, e='end')
