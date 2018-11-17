@@ -115,7 +115,7 @@ try:
 except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
-# start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
+# start a process to run the get_temp_humid function
 if __name__ == '__main__':
     g_time = Queue()
     g_temp = Queue()
