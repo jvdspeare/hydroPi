@@ -1,7 +1,7 @@
 # import modules
 import atexit
-import pandas as pd
-import plotly as py
+# import pandas as pd
+# import plotly as py
 import configparser as config
 import pigpio as gpio
 import DHT22
