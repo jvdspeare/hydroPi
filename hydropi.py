@@ -1,6 +1,6 @@
 # import modules
 import atexit
-# import pandas as pd
+import pandas as pd
 # import plotly as py
 import configparser as config
 import pigpio as gpio
@@ -55,10 +55,12 @@ def setup_temp_humid(gpio_num):
 # take temperature and humidity reading then store data in database
 def get_temp_humid(db_table, freq):
     while True:
-        setup_temp_humid.dht22.trigger()
-        time.sleep(4)
-        temp = setup_temp_humid.dht22.temperature()
-        humid = setup_temp_humid.dht22.humidity()
+        #setup_temp_humid.dht22.trigger()
+        #time.sleep(4)
+        #temp = setup_temp_humid.dht22.temperature()
+        #humid = setup_temp_humid.dht22.humidity()
+        temp = 30
+        humid = 70
         print(temp)
         print(humid)
         cursor = sql_db_connect.db.cursor()
@@ -72,10 +74,9 @@ def get_temp_humid(db_table, freq):
 
 # plot temperature and humidity on a graph
 def graph_temp_humid(db_table):
-    cursor = sql_db_connect.db.cursor()
-    cursor.execute('SELECT TIME, TEMP, HUMID FROM %s' % db_table)
-    rows = cursor.fetchall()
-    print(rows)
+    query = ('SELECT TIME, TEMP, HUMID FROM %s' % db_table)
+    df = pd.read_sql(query, sql_db_connect.db)
+    print(df)
 
 
 # cleanup function
@@ -96,11 +97,12 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
 
 # setup DHT22 sensor
+'''
 try:
     setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
 except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
-
+'''
 # start a process to run the get_temp_humid function, this will take temperature and humidity readings every x time
 if __name__ == '__main__':
     try:
