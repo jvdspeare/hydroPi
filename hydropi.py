@@ -76,8 +76,7 @@ def graph():
     app.layout = html.Div(children=[
         html.H1('hydropi'),
         dcc.Graph(id='Temperature', animate=True),
-        dcc.Interval(id='update', interval=5000)
-    ])
+        dcc.Interval(id='update', interval=5000)])
 
     @app.callback(Output('Temperature', 'figure'),
                   events=[Event('update', 'interval')])
