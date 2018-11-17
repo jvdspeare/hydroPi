@@ -112,4 +112,4 @@ if __name__ == '__main__':
 
 #graph_temp_humid(get_conf.conf['DB']['DB_TABLE'])
 
-atexit.register(clorox('End'))
+#atexit.register(clorox('End'))
