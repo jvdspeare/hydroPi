@@ -59,6 +59,8 @@ def get_temp_humid(db_table, freq):
         time.sleep(4)
         temp = setup_temp_humid.dht22.temperature()
         humid = setup_temp_humid.dht22.humidity()
+        print(temp)
+        print(humid)
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' % (db_table, time.time(), temp, humid))
