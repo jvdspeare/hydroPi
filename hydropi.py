@@ -53,10 +53,12 @@ def setup_temp_humid(gpio_num):
 # take temperature and humidity reading then store data in database
 def get_temp_humid(db_table, freq, g_time, g_temp, g_humid):
     while True:
-        setup_temp_humid.dht22.trigger()
+        #setup_temp_humid.dht22.trigger()
         time.sleep(4)
-        temp = setup_temp_humid.dht22.temperature()
-        humid = setup_temp_humid.dht22.humidity()
+        #temp = setup_temp_humid.dht22.temperature()
+        #humid = setup_temp_humid.dht22.humidity()
+        temp = 24
+        humid = 70
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' % (db_table, time.time(), temp, humid))
@@ -73,21 +75,51 @@ def get_temp_humid(db_table, freq, g_time, g_temp, g_humid):
 
 # plot temperature and humidity on a graph using dash
 def graph(freq):
+    data_dict = {'Temperature': g_temp.get(), 'Humidity': g_humid.get()}
+
+    x_date_time = list()
+    x_time = g_time.get()
+    for i in x_time:
+        x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
+
     app = dash.Dash()
-    app.layout = html.Div(children=[
-        html.H1('hydropi'),
-        dcc.Graph(id='Temperature', animate=True),
+    app.layout = html.Div([
+        html.Div([
+            html.H1('hydropi')]),
+        dcc.Dropdown(id='data-name',
+                     options=[{'label': s, 'value': s}
+                              for s in data_dict.keys()],
+                     value=['Temperature', 'Humidity'], multi=True),
+        html.Div(children=html.Div(id='graphs')),
         dcc.Interval(id='update', interval=(freq*1000)+4000)])
 
-    @app.callback(Output('Temperature', 'figure'),
-                  events=[Event('update', 'interval')])
-    def update_graph():
-        data = go.Scatter(
-            x=list(g_time.get()),
-            y=list(g_temp.get()),
-            name='scatter',
-            mode='lines+markers')
-        return {'data': [data]}
+    @app.callback(dash.dependencies.Output('graphs', 'children'),
+                  [dash.dependencies.Input('data-name', 'value')],
+                  events=[dash.dependencies.Event('update', 'interval')])
+    def update_graph(data_names):
+        graphs = []
+        x_date_time = list()
+        x_time = g_time.get()
+        for i in x_time:
+            x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
+
+        print(data_names)
+
+        for name in data_names:
+            print(name)
+            print(data_dict[name])
+
+            data = go.Scatter(
+                x=x_date_time,
+                y=list(data_dict[name]),
+                mode='lines+markers')
+
+            graphs.append(html.Div(dcc.Graph(
+                id=name,
+                animate=True,
+                figure={'data': [data]})))
+        return graphs
+
     if __name__ == '__main__':
         app.run_server()
 
@@ -110,10 +142,10 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
 
 # setup DHT22 sensor
-try:
-    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
-except ValueError as er:
-    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
+#try:
+#    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+#except ValueError as er:
+#    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
