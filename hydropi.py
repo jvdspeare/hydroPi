@@ -79,8 +79,7 @@ def graph_temp_humid(db_table):
 
 
 # cleanup function
-def clorox(e):
-    print(e)
+def clorox():
     try:
         p.terminate()
     except NameError:
