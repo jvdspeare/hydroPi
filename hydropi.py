@@ -51,7 +51,7 @@ def setup_temp_humid(gpio_num):
 
 
 # take temperature and humidity reading then store data in database
-def get_temp_humid(db_table, freq, g_time, g_temp):
+def get_temp_humid(db_table, freq, g_time, g_temp, g_humid):
     while True:
         setup_temp_humid.dht22.trigger()
         time.sleep(4)
@@ -67,6 +67,7 @@ def get_temp_humid(db_table, freq, g_time, g_temp):
         df = pd.read_sql(query, sql_db_connect.db)
         g_time.put(df.TIME)
         g_temp.put(df.TEMP)
+        g_humid.put(df.HUMID)
         time.sleep(freq)
 
 
@@ -118,10 +119,11 @@ except ValueError as er:
 if __name__ == '__main__':
     g_time = Queue()
     g_temp = Queue()
+    g_humid = Queue()
     try:
         p = Process(target=get_temp_humid,
                     args=(get_conf.conf['DB']['DB_TABLE'], int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']),
-                          g_time, g_temp))
+                          g_time, g_temp, g_humid))
         p.start()
     except ValueError as er:
         quit(clorox('TEMP_HUMID_FREQ must be a number - ' + str(er)))
