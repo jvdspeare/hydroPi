@@ -109,7 +109,6 @@ if __name__ == '__main__':
         p.start()
     except ValueError as er:
         quit(print('TEMP_HUMID_FREQ must be a number - ' + str(er)))
+    atexit.register(clorox, e='end')
 
 # graph_temp_humid(get_conf.conf['DB']['DB_TABLE'])
-
-atexit.register(clorox, e='end')
