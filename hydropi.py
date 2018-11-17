@@ -79,7 +79,8 @@ def graph_temp_humid(db_table):
 
 
 # cleanup function
-def clorox():
+def clorox(e):
+    print(e)
     try:
         p.terminate()
     except NameError:
@@ -111,4 +112,4 @@ if __name__ == '__main__':
 
 # graph_temp_humid(get_conf.conf['DB']['DB_TABLE'])
 
-atexit.register(clorox())
+atexit.register(clorox, e='end')
