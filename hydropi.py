@@ -16,7 +16,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-# load config file
+# read config file
 def get_conf(file_name):
     get_conf.conf = config.ConfigParser()
     try:
@@ -50,7 +50,7 @@ def setup_temp_humid(gpio_num):
     time.sleep(4)
 
 
-# take temperature and humidity reading then store data in database
+# read temperature and humidity sensor, store reading in database, read database
 def get_temp_humid(db_table, freq, g_time, g_temp, g_humid):
     while True:
         #setup_temp_humid.dht22.trigger()
@@ -102,22 +102,9 @@ def graph(freq):
         x_time = g_time.get()
         for i in x_time:
             x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
-
-        print(data_names)
-
         for name in data_names:
-            print(name)
-            print(data_dict[name])
-
-            data = go.Scatter(
-                x=x_date_time,
-                y=list(data_dict[name]),
-                mode='lines+markers')
-
-            graphs.append(html.Div(dcc.Graph(
-                id=name,
-                animate=True,
-                figure={'data': [data]})))
+            data = go.Scatter(x=x_date_time, y=list(data_dict[name]), mode='lines+markers')
+            graphs.append(html.Div(dcc.Graph(id=name, animate=True, figure={'data': [data]})))
         return graphs
 
     if __name__ == '__main__':
