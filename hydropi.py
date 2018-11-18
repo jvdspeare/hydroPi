@@ -87,7 +87,7 @@ def graph():
                               for s in data_dict.keys()],
                      value=['Temperature'], multi=True),
         html.Div(id='graphs'),
-        dcc.Interval(id='update', interval=30000)],
+        dcc.Interval(id='update', interval=60000)],
         className='container')
 
     @app.callback(Output('graphs', 'children'),
@@ -96,7 +96,7 @@ def graph():
     def update_graph(data_names):
         graphs = []
         x_date_time = list()
-        returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'], 10)
+        returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'], 100)
         print(list(returned.TIME))
         print(list(returned.TEMP))
         print(list(returned.HUMID))
@@ -113,7 +113,7 @@ def graph():
         return graphs
 
     if __name__ == '__main__':
-        app.run_server(debug=True, host='192.168.2.171')
+        app.run_server(host='192.168.2.171')
 
 
 # cleanup function
