@@ -3,7 +3,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Output, Event
+from dash.dependencies import Output, Input, Event
 import pandas as pd
 import plotly.graph_objs as go
 import configparser as config
@@ -77,11 +77,6 @@ def get_temp_humid(db_table, freq, g_time, g_temp, g_humid):
 def graph(freq):
     data_dict = {'Temperature': g_temp.get(), 'Humidity': g_humid.get()}
 
-    x_date_time = list()
-    x_time = g_time.get()
-    for i in x_time:
-        x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
-
     app = dash.Dash()
     app.layout = html.Div([
         html.Div([
@@ -89,23 +84,29 @@ def graph(freq):
         dcc.Dropdown(id='data-name',
                      options=[{'label': s, 'value': s}
                               for s in data_dict.keys()],
-                     value=['Temperature', 'Humidity'], multi=True),
-        html.Div(children=html.Div(id='graphs')),
-        dcc.Interval(id='update', interval=(freq*1000)+4000)])
+                     value=['Temperature'], multi=True),
+        html.Div(id='graphs')],
+        #dcc.Interval(id='update', interval=(freq*1000)+4000)],
+        className='container')
 
-    @app.callback(dash.dependencies.Output('graphs', 'children'),
-                  [dash.dependencies.Input('data-name', 'value')],
-                  events=[dash.dependencies.Event('update', 'interval')])
+    @app.callback(Output('graphs', 'children'),
+                  [Input('data-name', 'value')])
+                  #events=[Event('update', 'interval')])
     def update_graph(data_names):
         graphs = []
-        x_date_time = list()
-        x_time = g_time.get()
-        for i in x_time:
-            x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
-        for name in data_names:
-            data = go.Scatter(x=x_date_time, y=list(data_dict[name]), mode='lines+markers')
-            graphs.append(html.Div(dcc.Graph(
-                id=name, animate=True, figure={'data': [data], 'layout': go.Layout(title=name)})))
+        print(data_names)
+        if not data_names:
+            graphs.append(html.P('Select a graph'))
+        else:
+            x_date_time = list()
+            x_time = g_time.get()
+            for i in x_time:
+                x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
+            for name in data_names:
+                data = go.Scatter(x=x_date_time, y=list(data_dict[name]), mode='lines+markers')
+                graphs.append(html.Div(dcc.Graph(
+                    id=name, figure={'data': [data], 'layout': go.Layout(title=name)})))
+                print(name)
         return graphs
 
     if __name__ == '__main__':
