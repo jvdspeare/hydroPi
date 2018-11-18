@@ -44,7 +44,7 @@ def sql_db_connect(host, user, passw, db_name, db_table):
 def setup_temp_humid(gpio_num):
     pi = gpio.pi()
     if not pi.connected:
-        quit(clorox(''))
+        quit(clorox('pi not connected?'))
     setup_temp_humid.dht22 = DHT22.sensor(pi, gpio_num)
     setup_temp_humid.dht22.trigger()
     time.sleep(4)
@@ -53,12 +53,10 @@ def setup_temp_humid(gpio_num):
 # read temperature and humidity sensor, store reading in database, read database
 def get_temp_humid(db_table, freq):
     while True:
-        # setup_temp_humid.dht22.trigger()
+        setup_temp_humid.dht22.trigger()
         time.sleep(4)
-        # temp = setup_temp_humid.dht22.temperature()
-        # humid = setup_temp_humid.dht22.humidity()
-        temp = 90
-        humid = 90
+        temp = setup_temp_humid.dht22.temperature()
+        humid = setup_temp_humid.dht22.humidity()
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' %
@@ -66,7 +64,7 @@ def get_temp_humid(db_table, freq):
         except sql.err.DataError as e:
             quit(clorox('Check if the DHT22 sensor is connected - ' + str(e)))
         sql_db_connect.db.commit()
-        print('LOL')
+        print('get_temp_humid')
         time.sleep(freq)
 
 
@@ -136,10 +134,10 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
 
 # setup DHT22 sensor
-#try:
-#    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
-#except ValueError as er:
-#    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
+try:
+    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+except ValueError as er:
+    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
