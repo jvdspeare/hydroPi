@@ -85,8 +85,8 @@ def graph(freq):
                      options=[{'label': s, 'value': s}
                               for s in data_dict.keys()],
                      value=['Temperature'], multi=True),
-        html.Div(id='graphs')],
-        #dcc.Interval(id='update', interval=(freq*1000)+4000)],
+        html.Div(id='graphs'),
+        dcc.Interval(id='update', interval=15000)],
         className='container')
 
     @app.callback(Output('graphs', 'children'),
