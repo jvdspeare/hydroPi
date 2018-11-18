@@ -104,11 +104,12 @@ def graph(freq):
             x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
         for name in data_names:
             data = go.Scatter(x=x_date_time, y=list(data_dict[name]), mode='lines+markers')
-            graphs.append(html.Div(dcc.Graph(id=name, animate=True, figure={'data': [data]})))
+            graphs.append(html.Div(dcc.Graph(
+                id=name, animate=True, figure={'data': [data], 'layout': go.Layout(title=name)})))
         return graphs
 
     if __name__ == '__main__':
-        app.run_server()
+        app.run_server(debug=True)
 
 
 # cleanup function
