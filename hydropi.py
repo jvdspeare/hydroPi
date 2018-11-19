@@ -53,10 +53,12 @@ def setup_temp_humid(gpio_num):
 # read temperature and humidity sensor, store reading in database, read database
 def get_temp_humid(db_table, freq):
     while True:
-        setup_temp_humid.dht22.trigger()
+        #setup_temp_humid.dht22.trigger()
         time.sleep(4)
-        temp = setup_temp_humid.dht22.temperature()
-        humid = setup_temp_humid.dht22.humidity()
+        #temp = setup_temp_humid.dht22.temperature()
+        #humid = setup_temp_humid.dht22.humidity()
+        temp = 13
+        humid = 90
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' %
@@ -64,7 +66,6 @@ def get_temp_humid(db_table, freq):
         except sql.err.DataError as e:
             quit(clorox('Check if the DHT22 sensor is connected - ' + str(e)))
         sql_db_connect.db.commit()
-        print('get_temp_humid')
         time.sleep(freq)
 
 
@@ -76,18 +77,18 @@ def query(db_select, db_table, limit):
 
 
 # plot temperature and humidity on a graph using dash
-def graph():
-    data_dict = {'Temperature': 'TEMP', 'Humidity': 'HUMID'}
+def graph(freq, host, port):
+    data_dict = ['Temperature', 'Humidity']
     app = dash.Dash()
     app.layout = html.Div([
         html.Div([
             html.H1('hydropi')]),
         dcc.Dropdown(id='data-name',
                      options=[{'label': s, 'value': s}
-                              for s in data_dict.keys()],
+                              for s in data_dict],
                      value=['Temperature'], multi=True),
         html.Div(id='graphs'),
-        dcc.Interval(id='update', interval=60000)],
+        dcc.Interval(id='update', interval=freq * 1000 + 4000)],
         className='container')
 
     @app.callback(Output('graphs', 'children'),
@@ -95,25 +96,23 @@ def graph():
                   events=[Event('update', 'interval')])
     def update_graph(data_names):
         graphs = []
-        x_date_time = list()
-        returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'], 100)
-        print(list(returned.TIME))
-        print(list(returned.TEMP))
-        print(list(returned.HUMID))
+        returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'],
+                         int(get_conf.conf['GRAPH']['QUERY_LIMIT']))
+        query_data = {'Temperature': (list(returned.TEMP)), 'Humidity': (list(returned.HUMID))}
         if not data_names:
             graphs.append(html.P('Select a graph'))
         else:
+            x_date_time = list()
             for i in returned.TIME:
                 x_date_time.append(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(i)))
             for name in data_names:
-                data = go.Scatter(x=x_date_time, y=list(returned.TEMP), mode='lines+markers')
+                data = go.Scatter(x=x_date_time, y=query_data[name], mode='lines+markers')
                 graphs.append(html.Div(dcc.Graph(
                     id=name, animate=True, figure={'data': [data], 'layout': go.Layout(title=name)})))
-                print(name)
         return graphs
 
     if __name__ == '__main__':
-        app.run_server(host='192.168.2.171')
+        app.run_server(host=host, port=port)
 
 
 # cleanup function
@@ -134,10 +133,10 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
 
 # setup DHT22 sensor
-try:
-    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
-except ValueError as er:
-    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
+#try:
+#    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+#except ValueError as er:
+#    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
@@ -148,6 +147,7 @@ if __name__ == '__main__':
     except ValueError as er:
         quit(clorox('TEMP_HUMID_FREQ must be a number - ' + str(er)))
 
-graph()
+graph(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
+      int(get_conf.conf['GRAPH']['PORT']))
 
 # atexit.register(clorox, e='end')
