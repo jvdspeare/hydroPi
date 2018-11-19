@@ -1,5 +1,4 @@
 # import modules
-# import atexit
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -79,7 +78,7 @@ def query(db_select, db_table, limit):
 # plot temperature and humidity on a graph using dash
 def graph(freq, host, port):
     data_dict = ['Temperature', 'Humidity']
-    app = dash.Dash()
+    app = dash.Dash(__name__)
     app.layout = html.Div([
         html.Div([
             html.H1('hydropi')]),
@@ -96,8 +95,11 @@ def graph(freq, host, port):
                   events=[Event('update', 'interval')])
     def update_graph(data_names):
         graphs = []
-        returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'],
-                         int(get_conf.conf['GRAPH']['QUERY_LIMIT']))
+        try:
+            returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'],
+                             int(get_conf.conf['GRAPH']['QUERY_LIMIT']))
+        except ValueError as e:
+            quit(print(e))
         query_data = {'Temperature': (list(returned.TEMP)), 'Humidity': (list(returned.HUMID))}
         if not data_names:
             graphs.append(html.P('Select a graph'))
@@ -119,7 +121,11 @@ def graph(freq, host, port):
 def clorox(e):
     print(e)
     try:
-        p.terminate()
+        p_get_temp_humid.terminate()
+    except NameError:
+        pass
+    try:
+        p_graph.terminate()
     except NameError:
         pass
     sql_db_connect.db.close()
@@ -141,13 +147,13 @@ sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_con
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
     try:
-        p = Process(target=get_temp_humid,
-                    args=(get_conf.conf['DB']['DB_TABLE'], int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
-        p.start()
+        p_get_temp_humid = Process(target=get_temp_humid,
+                                   args=(get_conf.conf['DB']['DB_TABLE'],
+                                         int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
+        p_get_temp_humid.start()
+        p_graph = Process(target=graph,
+                          args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
+                                int(get_conf.conf['GRAPH']['PORT'])))
+        p_graph.start()
     except ValueError as er:
         quit(clorox('TEMP_HUMID_FREQ must be a number - ' + str(er)))
-
-graph(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
-      int(get_conf.conf['GRAPH']['PORT']))
-
-# atexit.register(clorox, e='end')
