@@ -70,7 +70,7 @@ def get_temp_humid(db_table, freq):
 # setup soil moisture sensor(s)
 def setup_soil_moisture():
     setup_soil_moisture.spi = spidev.SpiDev()
-    setup_soil_moisture.spi.open(0, 0)
+    setup_soil_moisture.spi.open(0, 1)
 
 
 # read soil moisture sensor(s)
