@@ -77,10 +77,7 @@ def setup_soil_moisture():
 def read_soil_moisture(adcnum):
     if adcnum > 7 or adcnum < 0:
         print('WTF')
-    i = 1
-    msg = [0x77]
-    msg.append(i)
-    r = setup_soil_moisture.spi.xfer2(msg)
+    r = setup_soil_moisture.spi.xfer2([1, 8 + adcnum << 4, 0])
     return r
 
 
