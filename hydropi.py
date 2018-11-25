@@ -8,6 +8,7 @@ import plotly.graph_objs as go
 import configparser as config
 import pigpio as gpio
 import DHT22
+import spidev
 import pymysql as sql
 import time
 from multiprocessing import Process
@@ -64,6 +65,28 @@ def get_temp_humid(db_table, freq):
             quit(clorox('Check if the DHT22 sensor is connected - ' + str(e)))
         sql_db_connect.db.commit()
         time.sleep(freq)
+
+
+#
+def setup_soil_moisture():
+    setup_soil_moisture.spi = spidev.SpiDev()
+
+
+#
+def read_soil_moisture(adcnum):
+    if adcnum > 7 or adcnum < 0:
+        print('WTF')
+    r = setup_soil_moisture.spi.xfer2([1, 8 + adcnum << 4, 0])
+    data = ((r[1] & 3) << 8) + r[2]
+    return data
+
+
+#
+def get_soil_moisture():
+    while True:
+        ldr_value = read_soil_moisture(0)
+        print(ldr_value)
+        time.sleep(3)
 
 
 # query database
@@ -141,6 +164,9 @@ try:
 except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
+# setup soil moisture sensor(s)
+setup_soil_moisture()
+
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
     try:
@@ -148,6 +174,8 @@ if __name__ == '__main__':
                                    args=(get_conf.conf['DB']['DB_TABLE'],
                                          int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
         p_get_temp_humid.start()
+        p_get_soil_moisture = Process(target=get_soil_moisture)
+        p_get_soil_moisture.start()
         p_graph = Process(target=graph,
                           args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
                                 int(get_conf.conf['GRAPH']['PORT'])))
