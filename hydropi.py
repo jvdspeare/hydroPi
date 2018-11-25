@@ -70,16 +70,18 @@ def get_temp_humid(db_table, freq):
 # setup soil moisture sensor(s)
 def setup_soil_moisture():
     setup_soil_moisture.spi = spidev.SpiDev()
-    setup_soil_moisture.spi.open(0, 1)
+    setup_soil_moisture.spi.open(0, 0)
 
 
 # read soil moisture sensor(s)
 def read_soil_moisture(adcnum):
     if adcnum > 7 or adcnum < 0:
         print('WTF')
-    r = setup_soil_moisture.spi.xfer2([1, 8 + adcnum << 4, 0])
-    data = ((r[1] & 3) << 8) + r[2]
-    return data
+    i = 1
+    msg = [0x77]
+    msg.append(i)
+    r = setup_soil_moisture.spi.xfer2(msg)
+    return r
 
 
 # post
