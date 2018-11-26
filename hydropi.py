@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 import configparser as config
 import pigpio as gpio
 import DHT22
-import MCP3008
+import Adafruit_MCP3008
 import Adafruit_GPIO.SPI as SPI
 import pymysql as sql
 import time
@@ -72,7 +72,7 @@ def get_temp_humid(db_table, freq):
 def setup_soil_moisture():
     SPI_PORT = 0
     SPI_DEVICE = 0
-    setup_soil_moisture.mcp = MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+    setup_soil_moisture.mcp = Adafruit_MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
 
 
 # read soil moisture sensor(s)
