@@ -1,20 +1,32 @@
 # import modules
+import Adafruit_GPIO.SPI as SPI
+import Adafruit_MCP3008
+import configparser as config
 import dash
 import dash_core_components as dcc
-import dash_html_components as html
 from dash.dependencies import Output, Input, Event
-import pandas as pd
-import plotly.graph_objs as go
-import configparser as config
-import pigpio as gpio
+import dash_html_components as html
 import DHT22
-import Adafruit_MCP3008
-import Adafruit_GPIO.SPI as SPI
-import pymysql as sql
-import time
 from multiprocessing import Process
+import pandas as pd
+import pigpio as gpio
+import plotly.graph_objs as go
+import pymysql as sql
+import sys
+import time
 import warnings
 warnings.filterwarnings('ignore')
+
+
+# progress bar
+def progress(count, total, status=''):
+    bar_len = 60
+    filled_len = int(round(bar_len * count / float(total)))
+    percents = round(100.0 * count / float(total), 1)
+    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+    sys.stdout.write('\r[%s] %s%s ...%s' % (bar, percents, '%', status))
+    sys.stdout.flush()
+    time.sleep(0.10)
 
 
 # read config file
@@ -156,39 +168,50 @@ def clorox(e):
     sql_db_connect.db.close()
 
 
+# welcome message
+print('Starting hydroPi')
+
 # load config
+progress(1, 8, status='load config.ini')
 get_conf('config.ini')
 
 # connect to database
+progress(2, 8, status='connect to mysql and configure required database & tables')
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
 
 # setup DHT22 sensor
+progress(3, 8, status='setup temperature & humidity sensor')
 try:
     setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
 except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # setup soil moisture sensor(s)
+progress(4, 8, status='setup soil moisture sensor(s)')
 setup_soil_moisture(
     int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_PORT']), int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_DEVICE']))
 
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
     try:
+        progress(5, 8, status='starting temperature & humidity reader')
         p_get_temp_humid = Process(target=get_temp_humid,
                                    args=(get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                                          int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
         p_get_temp_humid.start()
+        progress(6, 8, status='starting soil moisture sensor reader')
         p_get_soil_moisture = Process(target=get_soil_moisture,
                                       args=(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_CH'],
                                             get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ'])))
         p_get_soil_moisture.start()
+        progress(7, 8, status='starting graphing agent')
         p_graph = Process(target=graph,
                           args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
                                 int(get_conf.conf['GRAPH']['PORT'])))
         p_graph.start()
+        progress(8, 8, status='Done')
     except ValueError as er:
         quit(clorox(str(er)))
