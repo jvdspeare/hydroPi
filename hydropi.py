@@ -27,7 +27,7 @@ def get_conf(file_name):
 
 
 # connect to database, create database and table if not exists
-def sql_db_connect(host, user, passw, db_name, db_table):
+def sql_db_connect(host, user, passw, db_name, db_table, db_table_2):
     try:
         sql_db_connect.db = sql.connect(host, user, passw)
     except sql.err.OperationalError as e:
@@ -39,6 +39,16 @@ def sql_db_connect(host, user, passw, db_name, db_table):
         TIME INT NOT NULL,
         TEMP FLOAT(3, 1) NOT NULL,
         HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
+    cursor.execute('''CREATE TABLE IF NOT EXISTS %s (
+        TIME INT NOT NULL,
+        CH0 INT,
+        CH1 INT,
+        CH2 INT,
+        CH3 INT,
+        CH4 INT,
+        CH5 INT,
+        CH6 INT,
+        CH7 INT)''' % db_table_2)
 
 
 # setup temperature and humidity sensor
@@ -69,18 +79,19 @@ def get_temp_humid(db_table, freq):
 
 
 # setup soil moisture sensor(s)
-def setup_soil_moisture():
-    SPI_PORT = 0
-    SPI_DEVICE = 0
-    setup_soil_moisture.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+def setup_soil_moisture(spi_port, spi_device):
+    setup_soil_moisture.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(spi_port, spi_device))
 
 
 # read soil moisture sensor(s)
-def get_soil_moisture():
+def get_soil_moisture(ch, db_table, freq):
     while True:
-        data = setup_soil_moisture.mcp.read_adc(0)
-        print(data)
-        time.sleep(3)
+        for i in ch:
+            data = setup_soil_moisture.mcp.read_adc(i)
+            cursor = sql_db_connect.db.cursor()
+            cursor.execute('INSERT INTO %s(TIME, CH%i) VALUES (%f, %i)' %
+                           (db_table, i, time.time(), data))
+        time.sleep(freq)
 
 
 # query database
@@ -110,7 +121,7 @@ def graph(freq, host, port):
     def update_graph(data_names):
         graphs = []
         try:
-            returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE'],
+            returned = query('TIME, TEMP, HUMID', get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                              int(get_conf.conf['GRAPH']['QUERY_LIMIT']))
         except ValueError as e:
             quit(print(e))
@@ -150,7 +161,8 @@ get_conf('config.ini')
 
 # connect to database
 sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
-               get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE'])
+               get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
+               get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
 
 # setup DHT22 sensor
 try:
@@ -159,20 +171,24 @@ except ValueError as er:
     quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # setup soil moisture sensor(s)
-setup_soil_moisture()
+setup_soil_moisture(
+    int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_PORT']), int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_DEVICE']))
 
 # start a process to run the get_temp_humid function
 if __name__ == '__main__':
     try:
         p_get_temp_humid = Process(target=get_temp_humid,
-                                   args=(get_conf.conf['DB']['DB_TABLE'],
+                                   args=(get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                                          int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
         p_get_temp_humid.start()
-        p_get_soil_moisture = Process(target=get_soil_moisture)
+        p_get_soil_moisture = Process(target=get_soil_moisture,
+                                      args=(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_CH'],
+                                            get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
+                                            int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ'])))
         p_get_soil_moisture.start()
         p_graph = Process(target=graph,
                           args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
                                 int(get_conf.conf['GRAPH']['PORT'])))
         p_graph.start()
     except ValueError as er:
-        quit(clorox('TEMP_HUMID_FREQ must be a number - ' + str(er)))
+        quit(clorox(str(er)))
