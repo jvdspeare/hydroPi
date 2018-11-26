@@ -79,6 +79,11 @@ def setup_soil_moisture():
 def get_soil_moisture():
     data = setup_soil_moisture.mcp.read_adc(1)
     print(data)
+    print(data)
+    print(data)
+    print(data)
+    print(data)
+    print(data)
     time.sleep(3)
 
 
