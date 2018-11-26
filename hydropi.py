@@ -78,7 +78,7 @@ def setup_soil_moisture():
 # read soil moisture sensor(s)
 def get_soil_moisture():
     while True:
-        data = setup_soil_moisture.mcp.read_adc(1)
+        data = setup_soil_moisture.mcp.read_adc(0)
         print(data)
         time.sleep(3)
 
