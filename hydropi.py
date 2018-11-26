@@ -48,9 +48,7 @@ def sql_db_connect(host, user, passw, db_name, db_table, db_table_2):
     cursor.execute('CREATE DATABASE IF NOT EXISTS %s;' % db_name)
     cursor.execute('USE %s;' % db_name)
     cursor.execute('''CREATE TABLE IF NOT EXISTS %s (
-        TIME INT NOT NULL,
-        TEMP FLOAT(3, 1) NOT NULL,
-        HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
+        TIME INT NOT NULL, TEMP FLOAT(3, 1) NOT NULL, HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
     cursor.execute('''CREATE TABLE IF NOT EXISTS %s (
         TIME INT NOT NULL, CH0 INT, CH1 INT, CH2 INT, CH3 INT, CH4 INT, CH5 INT, CH6 INT, CH7 INT)''' % db_table_2)
 
