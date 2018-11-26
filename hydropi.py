@@ -52,15 +52,7 @@ def sql_db_connect(host, user, passw, db_name, db_table, db_table_2):
         TEMP FLOAT(3, 1) NOT NULL,
         HUMID FLOAT(3, 1) NOT NULL)''' % db_table)
     cursor.execute('''CREATE TABLE IF NOT EXISTS %s (
-        TIME INT NOT NULL,
-        CH0 INT,
-        CH1 INT,
-        CH2 INT,
-        CH3 INT,
-        CH4 INT,
-        CH5 INT,
-        CH6 INT,
-        CH7 INT)''' % db_table_2)
+        TIME INT NOT NULL, CH0 INT, CH1 INT, CH2 INT, CH3 INT, CH4 INT, CH5 INT, CH6 INT, CH7 INT)''' % db_table_2)
 
 
 # setup temperature and humidity sensor
@@ -169,7 +161,16 @@ def clorox(e):
 
 
 # welcome message
-print('Starting hydroPi')
+print('''
+ _               _          ______ _ 
+| |             | |         | ___ (_)
+| |__  _   _  __| |_ __ ___ | |_/ /_ 
+| '_ \| | | |/ _` | '__/ _ \|  __/| |
+| | | | |_| | (_| | | | (_) | |   | |
+|_| |_|\__, |\__,_|_|  \___/\_|   |_|
+        __/ |                        
+       |___/
+''')
 
 # load config
 progress(1, 8, status='load config.ini')
