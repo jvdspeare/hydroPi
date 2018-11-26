@@ -81,6 +81,7 @@ def get_soil_moisture():
     print(data)
     time.sleep(3)
 
+
 # query database
 def query(db_select, db_table, limit):
     q = ('SELECT %s FROM %s ORDER BY TIME DESC LIMIT %i' % (db_select, db_table, limit))
