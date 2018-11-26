@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 import configparser as config
 import pigpio as gpio
 import DHT22
-import spidev
+import MCP3008
 import pymysql as sql
 import time
 from multiprocessing import Process
@@ -69,25 +69,15 @@ def get_temp_humid(db_table, freq):
 
 # setup soil moisture sensor(s)
 def setup_soil_moisture():
-    setup_soil_moisture.spi = spidev.SpiDev()
-    setup_soil_moisture.spi.open(0, 0)
+    SPI_PORT = 0
+    SPI_DEVICE = 0
+    setup_soil_moisture.mcp = MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
 
 
 # read soil moisture sensor(s)
-def read_soil_moisture(adcnum):
-    if adcnum > 7 or adcnum < 0:
-        print('WTF')
-    r = setup_soil_moisture.spi.xfer2([1, 8 + adcnum << 4, 0])
-    return r
-
-
-# post
 def get_soil_moisture():
-    while True:
-        ldr_value = read_soil_moisture(0)
-        print(ldr_value)
-        time.sleep(3)
-
+    data = setup_soil_moisture.mcp.read_adc(1)
+    print(data)
 
 # query database
 def query(db_select, db_table, limit):
