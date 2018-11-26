@@ -9,6 +9,7 @@ import configparser as config
 import pigpio as gpio
 import DHT22
 import MCP3008
+import Adafruit_GPIO.SPI as SPI
 import pymysql as sql
 import time
 from multiprocessing import Process
