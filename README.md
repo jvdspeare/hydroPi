@@ -15,7 +15,7 @@ I sourced all the components for this project from Amazon.
 
 
 ### Installing
-####Install an Operating System on the Raspberry Pi
+#### Install an Operating System on the Raspberry Pi
 
 1. Download Raspbian from [raspberrypi.org](https://www.raspberrypi.org/downloads/raspbian/) - 
 the lite distribution is recommended.
@@ -25,7 +25,7 @@ the lite distribution is recommended.
     ssh pi@192.168.0.1
     ```
 
-####Configure the Raspberry Pi
+#### Configure the Raspberry Pi
 
 Once you have an open SSH session with the Raspberry Pi we can start getting a basic configuration in place
 1. Make sure your Raspberry Pi is up-to-date
