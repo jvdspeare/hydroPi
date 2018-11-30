@@ -15,7 +15,7 @@ I sourced all the components for this project from Amazon.
 
 
 ### Installing
-#####Install an Operating System on the Raspberry Pi
+####Install an Operating System on the Raspberry Pi
 
 1. Download Raspbian from [raspberrypi.org](https://www.raspberrypi.org/downloads/raspbian/) - 
 the lite distribution is recommended.
@@ -25,7 +25,7 @@ the lite distribution is recommended.
     ssh pi@192.168.0.1
     ```
 
-#####Configure the Raspberry Pi
+####Configure the Raspberry Pi
 
 Once you have an open SSH session with the Raspberry Pi we can start getting a basic configuration in place
 1. Make sure your Raspberry Pi is up-to-date
@@ -41,3 +41,16 @@ Once you have an open SSH session with the Raspberry Pi we can start getting a b
     sudo raspi-config
     ```
 Select option 5 - Interfacing Options - then select SPI and confirm you wish to enable it.
+
+## Built With
+* [Adafruit](https://github.com/adafruit) - libraries for interfacing with the MCP3008 & SPI
+* [dash](https://github.com/plotly/dash) - Analytical Web Apps for Python. No JavaScript Required
+* [pandas](https://github.com/pandas-dev/pandas) - Flexible and powerful data analysis / manipulation library for Python
+* [pigpio](http://abyz.me.uk/rpi/pigpio/) - Libraries for interfacing with the GPIO pins and DHT22 sensor
+* [PyMySQL](https://github.com/PyMySQL/PyMySQL) - Pure Python MySQL Client
+
+## Authors
+* jvdspeare
+
+## License
+This project is licensed under the MIT License - see the LICENSE.md file for details
