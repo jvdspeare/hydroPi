@@ -13,7 +13,6 @@ Interact with the Environment using Temperature, Humidity, Soil Moisture Sensors
 #### Where to buy?
 I sourced all the components for this project from Amazon.
 
-
 ### Installing
 #### Install an Operating System on the Raspberry Pi
 
@@ -50,7 +49,7 @@ Select option 5 - Interfacing Options - then select SPI and confirm you wish to 
 * [PyMySQL](https://github.com/PyMySQL/PyMySQL) - Pure Python MySQL Client
 
 ## Authors
-* jvdspeare - 
+* jvdspeare
 
 ## License
 This project is licensed under the MIT License - see the LICENSE.md file for details
