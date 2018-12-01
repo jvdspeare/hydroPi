@@ -20,13 +20,13 @@ warnings.filterwarnings('ignore')
 
 # progress bar
 def progress(count, total, status=''):
-    bar_len = 60
+    bar_len = 30
     filled_len = int(round(bar_len * count / float(total)))
     percents = round(100.0 * count / float(total), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
     sys.stdout.write('\r[%s] %s%s ...%s' % (bar, percents, '%', status))
     sys.stdout.flush()
-    time.sleep(0.10)
+    time.sleep(0.25)
 
 
 # read config file
@@ -89,8 +89,9 @@ def setup_soil_moisture(spi_port, spi_device):
 def get_soil_moisture(ch, db_table, freq):
     while True:
         for i in ch:
-            print(i)
             data = setup_soil_moisture.mcp.read_adc(int(i))
+            print('THIS IS DATA >>>')
+            print(data)
             cursor = sql_db_connect.db.cursor()
             cursor.execute('INSERT INTO %s(TIME, CH%s) VALUES (%f, %s)' %
                            (db_table, i, time.time(), data))
