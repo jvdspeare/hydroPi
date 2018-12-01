@@ -12,6 +12,7 @@ print('''
 
 # import sys
 import sys
+import time
 
 
 # progress bar
@@ -40,7 +41,6 @@ import pandas as pd
 import pigpio as gpio
 import plotly.graph_objs as go
 import pymysql as sql
-import time
 import warnings
 warnings.filterwarnings('ignore')
 
