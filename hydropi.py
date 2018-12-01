@@ -183,18 +183,22 @@ def clorox(e):
 def clorox_c(sig, frame):
     try:
         p_get_temp_humid.terminate()
+        p_get_temp_humid.join()
     except NameError:
         pass
     try:
         p_get_soil_moisture.terminate()
+        p_get_soil_moisture.join()
     except NameError:
         pass
     try:
         p_read_soil_moisture.terminate()
+        p_read_soil_moisture.join()
     except NameError:
         pass
     try:
         p_graph.terminate()
+        p_graph.join()
     except NameError:
         pass
     sql_db_connect.db.close()
