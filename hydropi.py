@@ -12,15 +12,15 @@ import pandas as pd
 import pigpio as gpio
 import plotly.graph_objs as go
 import pymysql as sql
+import signal
 import sys
 import time
 import warnings
 warnings.filterwarnings('ignore')
 
-
 # progress bar
 def progress(count, total, status=''):
-    bar_len = 30
+    bar_len = 28
     filled_len = int(round(bar_len * count / float(total)))
     percents = round(100.0 * count / float(total), 1)
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
@@ -162,11 +162,23 @@ def clorox(e):
     except NameError:
         pass
     try:
+        p_get_soil_moisture.terminate()
+    except NameError:
+        pass
+    try:
+        p_read_soil_moisture.terminate()
+    except NameError:
+        pass
+    try:
         p_graph.terminate()
     except NameError:
         pass
     sql_db_connect.db.close()
+    print('PROGRAM TERMINATED')
 
+
+# cleanup when exit
+signal.signal(signal.SIGINT, clorox('YOU PRESSED THE BUTTON'))
 
 # welcome message
 print('''
