@@ -257,6 +257,7 @@ if __name__ == '__main__':
                                    args=(get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                                          int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
         p_get_temp_humid.start()
+        p_get_temp_humid.join()
 
         # process to read the soil moisture sensor(s)
         progress(6, 9, status='starting soil moisture sensor reader')
@@ -265,6 +266,7 @@ if __name__ == '__main__':
                                             get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ'])))
         p_get_soil_moisture.start()
+        p_get_soil_moisture.join()
 
         # process to read the soil moisture sensor data from the database
         progress(7, 9, status='starting soil moisture sensor monitor')
@@ -274,6 +276,7 @@ if __name__ == '__main__':
                                              int(get_conf.conf['SENSOR']['QUERY_LIMIT']),
                                              int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK'])))
         p_read_soil_moisture.start()
+        p_read_soil_moisture.join()
 
         # process to run the graphing agent
         progress(8, 9, status='starting graphing agent')
@@ -281,6 +284,7 @@ if __name__ == '__main__':
                           args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
                                 int(get_conf.conf['GRAPH']['PORT'])))
         p_graph.start()
+        p_graph.join()
         progress(9, 9, status='Done')
     except ValueError as er:
         quit(clorox(str(er)))
