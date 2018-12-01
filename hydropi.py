@@ -175,6 +175,7 @@ def clorox(e):
         pass
     sql_db_connect.db.close()
     print('PROGRAM TERMINATED')
+    exit()
 
 
 # cleanup when exit
