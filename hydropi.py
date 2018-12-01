@@ -198,7 +198,7 @@ def clorox_c(sig, frame):
         pass
     sql_db_connect.db.close()
     print('Goodbye')
-    sys.exit()
+    sys.exit(0)
 
 
 # cleanup when exit
