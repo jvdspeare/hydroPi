@@ -178,8 +178,13 @@ def clorox(e):
     exit()
 
 
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
+
+
 # cleanup when exit
-signal.signal(signal.SIGINT, clorox('YOU PRESSED THE BUTTON'))
+signal.signal(signal.SIGINT, signal_handler)
 
 # welcome message
 print('''
