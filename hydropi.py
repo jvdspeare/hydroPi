@@ -179,8 +179,25 @@ def clorox(e):
 
 
 def signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
-    sys.exit(0)
+    try:
+        p_get_temp_humid.terminate()
+    except NameError:
+        pass
+    try:
+        p_get_soil_moisture.terminate()
+    except NameError:
+        pass
+    try:
+        p_read_soil_moisture.terminate()
+    except NameError:
+        pass
+    try:
+        p_graph.terminate()
+    except NameError:
+        pass
+    sql_db_connect.db.close()
+    print('PROGRAM TERMINATED')
+    exit()
 
 
 # cleanup when exit
