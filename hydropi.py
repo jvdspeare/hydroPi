@@ -12,7 +12,6 @@ import pandas as pd
 import pigpio as gpio
 import plotly.graph_objs as go
 import pymysql as sql
-import signal
 import sys
 import time
 import warnings
@@ -175,44 +174,7 @@ def clorox(e):
     except NameError:
         pass
     sql_db_connect.db.close()
-    print('PROGRAM TERMINATED')
-    exit()
 
-
-# cleanup function
-def clorox_c(sig, frame):
-    try:
-        p_get_temp_humid.terminate()
-        time.sleep(1)
-        p_get_temp_humid.join()
-    except NameError:
-        pass
-    try:
-        p_get_soil_moisture.terminate()
-        time.sleep(1)
-        p_get_soil_moisture.join()
-    except NameError:
-        pass
-    try:
-        p_read_soil_moisture.terminate()
-        time.sleep(1)
-        p_read_soil_moisture.join()
-    except NameError:
-        pass
-    try:
-        p_graph.terminate()
-        time.sleep(1)
-        p_graph.join()
-    except NameError:
-        pass
-    sql_db_connect.db.close()
-    print('Goodbye')
-    time.sleep(3)
-    sys.exit(0)
-
-
-# cleanup when exit
-signal.signal(signal.SIGINT, clorox_c)
 
 # welcome message
 print('''
@@ -282,9 +244,6 @@ if __name__ == '__main__':
                                 int(get_conf.conf['GRAPH']['PORT'])))
         p_graph.start()
         progress(9, 9, status='Done')
-
-        while True:
-            time.sleep(1)
 
     except ValueError as er:
         quit(clorox(str(er)))
