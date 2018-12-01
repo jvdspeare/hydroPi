@@ -178,7 +178,8 @@ def clorox(e):
     exit()
 
 
-def signal_handler(sig, frame):
+# cleanup function
+def clorox_c(sig, frame):
     try:
         p_get_temp_humid.terminate()
     except NameError:
@@ -196,12 +197,12 @@ def signal_handler(sig, frame):
     except NameError:
         pass
     sql_db_connect.db.close()
-    print('PROGRAM TERMINATED')
-    exit()
+    print('Goodbye')
+    sys.exit()
 
 
 # cleanup when exit
-signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGINT, clorox_c)
 
 # welcome message
 print('''
