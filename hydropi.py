@@ -18,8 +18,6 @@ import time
 import warnings
 warnings.filterwarnings('ignore')
 
-print('LOLOLOL')
-
 
 # progress bar
 def progress(count, total, status=''):
@@ -201,7 +199,7 @@ def clorox_c(sig, frame):
         pass
     sql_db_connect.db.close()
     print('Goodbye')
-    time.sleep(1)
+    time.sleep(3)
     sys.exit(0)
 
 
