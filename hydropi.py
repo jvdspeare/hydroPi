@@ -283,10 +283,8 @@ if __name__ == '__main__':
         p_graph.start()
         progress(9, 9, status='Done')
 
-        p_get_temp_humid.join()
-        p_get_soil_moisture.join()
-        p_read_soil_moisture.join()
-        p_graph.join()
+        while True:
+            time.sleep(1)
 
     except ValueError as er:
         quit(clorox(str(er)))
