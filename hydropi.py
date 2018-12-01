@@ -23,29 +23,29 @@ def progress(count, total, status=''):
     bar = '=' * filled_len + '-' * (bar_len - filled_len)
     sys.stdout.write('\r[%s] %s%s ...%s' % (bar, percents, '%', status))
     sys.stdout.flush()
-    time.sleep(0.25)
+    time.sleep(0.20)
 
 
 # import modules
-progress(1, 16, status='importing modules... Adafruit')
+progress(1, 16, status='importing modules: Adafruit')
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008
 import configparser as config
-progress(2, 16, status='importing modules... dash')
+progress(2, 16, status='importing modules: dash')
 import dash
 import dash_core_components as dcc
 from dash.dependencies import Output, Input, Event
 import dash_html_components as html
-progress(3, 16, status='importing modules... DHT22')
+progress(3, 16, status='importing modules: DHT22')
 import DHT22
 from multiprocessing import Process
-progress(4, 16, status='importing modules... pandas')
+progress(4, 16, status='importing modules: pandas')
 import pandas as pd
-progress(5, 16, status='importing modules... pigpio')
+progress(5, 16, status='importing modules: pigpio')
 import pigpio as gpio
-progress(6, 16, status='importing modules... plotly')
+progress(6, 16, status='importing modules: plotly')
 import plotly.graph_objs as go
-progress(7, 16, status='importing modules... PyMySQL')
+progress(7, 16, status='importing modules: PyMySQL')
 import pymysql as sql
 import warnings
 warnings.filterwarnings('ignore')
