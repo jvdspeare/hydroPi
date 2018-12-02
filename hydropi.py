@@ -119,10 +119,7 @@ def get_soil_moisture(ch, db_table, freq):
         cursor = sql_db_connect.db.cursor()
         data_ch_str = ', '.join(data_ch)
         data_str = ', '.join(data)
-        print(data_ch_str)
-        print(data_str)
-        cursor.execute('INSERT INTO %s(TIME, %s) VALUES (%f, %s)' %
-                       (db_table, data_ch_str, time.time(), data_str))
+        cursor.execute('INSERT INTO %s(TIME, %s) VALUES (%f, %s)' % (db_table, data_ch_str, time.time(), data_str))
         time.sleep(freq)
 
 
@@ -180,8 +177,8 @@ def read_soil_moisture(ch, db_table, limit, freq):
         data = list()
         for i in ch:
             data.append('CH%s' % i)
-        #returned = query('TIME, '.join(repr(e) for e in data), db_table, limit)
-        returned = query('TIME, CH0, CH1, CH2', db_table, limit)
+        data = ', '.join(data)
+        returned = query('TIME, %s', db_table, limit % data)
         print(returned)
         time.sleep(freq)
 
