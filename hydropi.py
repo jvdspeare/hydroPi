@@ -111,13 +111,14 @@ def setup_soil_moisture(spi_port, spi_device):
 # read soil moisture sensor(s)
 def get_soil_moisture(ch, db_table, freq):
     while True:
+        data_ch = list()
+        data = list()
         for i in ch:
-            print(i)
-            data = setup_soil_moisture.mcp.read_adc(int(i))
-            cursor = sql_db_connect.db.cursor()
-            print(data)
-            cursor.execute('INSERT INTO %s(TIME, CH%s) VALUES (%f, %s)' %
-                           (db_table, i, time.time(), data))
+            data_ch.append('CH%s' % i)
+            data.append(setup_soil_moisture.mcp.read_adc(int(i)))
+        cursor = sql_db_connect.db.cursor()
+        cursor.execute('INSERT INTO %s(TIME, ' + ', '.join(data_ch) + ') VALUES (%f, ' + ', '.join(data) + ')' %
+                       (db_table, time.time()))
         time.sleep(freq)
 
 
