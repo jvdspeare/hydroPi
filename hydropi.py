@@ -117,7 +117,9 @@ def get_soil_moisture(ch, db_table, freq):
             data_ch.append('CH%s' % i)
             data.append(setup_soil_moisture.mcp.read_adc(int(i)))
         cursor = sql_db_connect.db.cursor()
-        cursor.execute('INSERT INTO %s(TIME, ' + ', '.join(data_ch) + ') VALUES (%f, ' + ', '.join(data) + ')' %
+        data_ch_str = ', '.join(data_ch)
+        data_str = ', '.join(data)
+        cursor.execute('INSERT INTO %s(TIME, ' + data_ch_str + ') VALUES (%f, ' + data_str + ')' %
                        (db_table, time.time()))
         time.sleep(freq)
 
