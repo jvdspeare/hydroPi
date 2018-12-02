@@ -175,7 +175,8 @@ def read_soil_moisture(ch, db_table, limit, freq):
         data = list()
         for i in ch:
             data.append('CH%s' % i)
-        returned = query('TIME, '.join(repr(e) for e in data), db_table, limit)
+        #returned = query('TIME, '.join(repr(e) for e in data), db_table, limit)
+        returned = query('TIME, CH0, CH1, CH2', db_table, limit)
         print(returned)
         time.sleep(freq)
 
