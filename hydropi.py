@@ -45,9 +45,10 @@ progress(6, 17, status='importing modules: plotly')
 import plotly.graph_objs as go
 progress(7, 17, status='importing modules: PyMySQL')
 import pymysql as sql
-progress(8, 17, status='importing modules: configparser, multiprocessing & warnings')
+progress(8, 17, status='importing modules: configparser, multiprocessing, smtplib & warnings')
 import configparser as config
 from multiprocessing import Process
+import smtplib
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -63,10 +64,7 @@ def get_conf(file_name):
 
 # connect to database, create database and table if not exists
 def sql_db_connect(host, user, passw, db_name, db_table, db_table_2):
-    try:
-        sql_db_connect.db = sql.connect(host, user, passw)
-    except sql.err.OperationalError as e:
-        quit(print(e))
+    sql_db_connect.db = sql.connect(host, user, passw)
     cursor = sql_db_connect.db.cursor()
     cursor.execute('CREATE DATABASE IF NOT EXISTS %s;' % db_name)
     cursor.execute('USE %s;' % db_name)
@@ -171,21 +169,51 @@ def graph(freq, host, port):
         app.run_server(host=host, port=port)
 
 
+# email sender
+def email(host, port, user, passw, from_addr, to_addr, subject, content, ch):
+    server = smtplib.SMTP(host, port)
+    server.starttls()
+    server.login(user, passw)
+    message = 'From: <%s>\nTo: <%s>\nMIME-Version: 1.0\nContext-type: text/html\nSubject: %s\n\n%s %s' \
+              % (from_addr, to_addr, subject, content, ch)
+    server.sendmail(from_addr, to_addr, message)
+    server.quit()
+
+
 # monitor soil moisture sensor(s)
-def read_soil_moisture(ch, db_table, limit, freq):
+def read_soil_moisture(ch, db_table, limit, freq, wet_trigger, dry_trigger):
+    he_protec = {}
+    data = list()
+    for i in ch:
+        data.append('CH%s' % i)
+    for i in data:
+        he_protec[i] = False
+    data_str = ', '.join(data)
     while True:
-        data = list()
-        for i in ch:
-            data.append('CH%s' % i)
-        data = ', '.join(data)
-        returned = query('TIME, %s' % data, db_table, limit)
-        print(returned)
+        returned = query('TIME, %s' % data_str, db_table, limit)
+        for i in data:
+            for r in getattr(returned, i):
+                if r < wet_trigger:
+                    print(str(i) + ' wet')
+                    freq = int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK'])
+                    he_protec[i] = False
+                elif r > dry_trigger:
+                    print(str(i) + ' dry')
+                    freq = 3
+                    if he_protec[i] is False:
+                        email(get_conf.conf['EMAIL']['HOST'], int(get_conf.conf['EMAIL']['PORT']),
+                              get_conf.conf['EMAIL']['USER'], get_conf.conf['EMAIL']['PASSW'],
+                              get_conf.conf['EMAIL']['FROM'], get_conf.conf['EMAIL']['TO'],
+                              get_conf.conf['EMAIL']['SUBJECT'], get_conf.conf['EMAIL']['MESSAGE'], i)
+                    he_protec[i] = True
+                else:
+                    print(str(i) + ' okay')
         time.sleep(freq)
 
 
 # cleanup function
-def clorox(e):
-    print(e)
+def clorox(e_msg):
+    print('\nerror: ' + str(e_msg))
     try:
         p_get_temp_humid.terminate()
     except NameError:
@@ -203,6 +231,7 @@ def clorox(e):
     except NameError:
         pass
     sql_db_connect.db.close()
+    sys.exit()
 
 
 # load config
@@ -210,10 +239,13 @@ progress(9, 17, status='load config.ini')
 get_conf('config.ini')
 
 # connect to database
-progress(10, 17, status='connect to mysql and configure required database & tables')
-sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
-               get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
-               get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
+try:
+    progress(10, 17, status='connect to mysql and configure required database & tables')
+    sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
+                   get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
+                   get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
+except sql.err.OperationalError as e:
+    clorox(e)
 
 # setup DHT22 sensor
 progress(11, 17, status='setup temperature & humidity sensor')
@@ -250,8 +282,10 @@ if __name__ == '__main__':
         p_read_soil_moisture = Process(target=read_soil_moisture,
                                        args=(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_CH'],
                                              get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
-                                             int(get_conf.conf['SENSOR']['QUERY_LIMIT']),
-                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK'])))
+                                             1,
+                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK']),
+                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_WET_TRIGGER']),
+                                             int(get_conf.conf['SENSOR']['SOIL_MOISTURE_DRY_TRIGGER'])))
         p_read_soil_moisture.start()
 
         # process to run the graphing agent
