@@ -27,30 +27,50 @@ def progress(count, total, status=''):
 
 
 # import modules
-progress(1, 17, status='importing modules: adafruit')
+progress(1, 8, status='importing modules: adafruit')
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_MCP3008
-progress(2, 17, status='importing modules: dash')
+progress(2, 8, status='importing modules: dash')
 import dash
 import dash_core_components as dcc
 from dash.dependencies import Output, Input, Event
 import dash_html_components as html
-progress(3, 17, status='importing modules: dht22')
+progress(3, 8, status='importing modules: dht22')
 import DHT22
-progress(4, 17, status='importing modules: pandas')
+progress(4, 8, status='importing modules: pandas')
 import pandas as pd
-progress(5, 17, status='importing modules: pigpio')
+progress(5, 8, status='importing modules: pigpio')
 import pigpio as gpio
-progress(6, 17, status='importing modules: plotly')
+progress(6, 8, status='importing modules: plotly')
 import plotly.graph_objs as go
-progress(7, 17, status='importing modules: PyMySQL')
+progress(7, 8, status='importing modules: PyMySQL')
 import pymysql as sql
-progress(8, 17, status='importing modules: configparser, multiprocessing, smtplib & warnings')
+progress(8, 8, status='importing modules: configparser, multiprocessing, smtplib & warnings')
 import configparser as config
 from multiprocessing import Process
 import smtplib
 import warnings
 warnings.filterwarnings('ignore')
+
+
+# yes no question
+def yes_no(question):
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    prompt = " [y/n] "
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
+
+
+# debug
+debug = yes_no('\ndebug?')
+calibrate = yes_no('calibrate?')
 
 
 # read config file
@@ -87,10 +107,14 @@ def setup_temp_humid(gpio_num):
 # read temperature and humidity sensor, store reading in database, read database
 def get_temp_humid(db_table, freq):
     while True:
-        setup_temp_humid.dht22.trigger()
-        time.sleep(4)
-        temp = setup_temp_humid.dht22.temperature()
-        humid = setup_temp_humid.dht22.humidity()
+        if debug is False:
+            setup_temp_humid.dht22.trigger()
+            time.sleep(3)
+            temp = setup_temp_humid.dht22.temperature()
+            humid = setup_temp_humid.dht22.humidity()
+        else:
+            temp = 24.5
+            humid = 50.5
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' %
@@ -113,7 +137,10 @@ def get_soil_moisture(ch, db_table, freq):
         data = list()
         for i in ch:
             data_ch.append('CH%s' % i)
-            data.append(str(setup_soil_moisture.mcp.read_adc(int(i))))
+            if debug is False:
+                data.append(str(setup_soil_moisture.mcp.read_adc(int(i))))
+            else:
+                data.append('888')
         cursor = sql_db_connect.db.cursor()
         data_ch_str = ', '.join(data_ch)
         data_str = ', '.join(data)
@@ -235,12 +262,12 @@ def clorox(e_msg):
 
 
 # load config
-progress(9, 17, status='load config.ini')
+progress(1, 7, status='load config.ini')
 get_conf('config.ini')
 
 # connect to database
 try:
-    progress(10, 17, status='connect to mysql and configure required database & tables')
+    progress(2, 7, status='connect to mysql and configure required database & tables')
     sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                    get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                    get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
@@ -248,29 +275,32 @@ except sql.err.OperationalError as e:
     clorox(e)
 
 # setup DHT22 sensor
-progress(11, 17, status='setup temperature & humidity sensor')
-try:
-    setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
-except ValueError as er:
-    quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
+if debug is False:
+    progress(3, 7, status='setup temperature & humidity sensor')
+    try:
+        setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
+    except ValueError as er:
+        quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # setup soil moisture sensor(s)
-progress(12, 17, status='setup soil moisture sensor(s)')
-setup_soil_moisture(
-    int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_PORT']), int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_DEVICE']))
+if debug is False:
+    progress(4, 7, status='setup soil moisture sensor(s)')
+    setup_soil_moisture(
+        int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_PORT']),
+        int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_DEVICE']))
 
 # start processes to run functions with loops
 if __name__ == '__main__':
     try:
         # process to read the temperature & humidity sensor
-        progress(13, 17, status='starting temperature & humidity reader')
+        progress(5, 7, status='starting temperature & humidity reader')
         p_get_temp_humid = Process(target=get_temp_humid,
                                    args=(get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                                          int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ'])))
         p_get_temp_humid.start()
 
         # process to read the soil moisture sensor(s)
-        progress(14, 17, status='starting soil moisture sensor reader')
+        progress(6, 7, status='starting soil moisture sensor reader')
         p_get_soil_moisture = Process(target=get_soil_moisture,
                                       args=(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_CH'],
                                             get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
@@ -278,7 +308,7 @@ if __name__ == '__main__':
         p_get_soil_moisture.start()
 
         # process to read the soil moisture sensor data from the database
-        progress(15, 17, status='starting soil moisture sensor monitor')
+        progress(7, 7, status='starting soil moisture sensor monitor')
         p_read_soil_moisture = Process(target=read_soil_moisture,
                                        args=(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_CH'],
                                              get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'],
@@ -289,12 +319,12 @@ if __name__ == '__main__':
         p_read_soil_moisture.start()
 
         # process to run the graphing agent
-        progress(16, 17, status='starting graphing agent')
+        progress(8, 8, status='starting graphing agent')
         p_graph = Process(target=graph,
                           args=(int(get_conf.conf['SENSOR']['TEMP_HUMID_FREQ']), get_conf.conf['GRAPH']['HOST'],
                                 int(get_conf.conf['GRAPH']['PORT'])))
         p_graph.start()
-        progress(17, 17, status='Done')
+        progress(9, 9, status='Done')
 
     except ValueError as er:
         quit(clorox(str(er)))
