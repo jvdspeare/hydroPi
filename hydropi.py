@@ -69,7 +69,8 @@ def yes_no(question):
 
 
 # debug
-debug = yes_no('\ndebug?')
+debug_nopi = yes_no('\ndebug no-pi?')
+debug = yes_no('debug?')
 calibrate = yes_no('calibrate?')
 
 
@@ -107,7 +108,7 @@ def setup_temp_humid(gpio_num):
 # read temperature and humidity sensor, store reading in database, read database
 def get_temp_humid(db_table, freq):
     while True:
-        if debug is False:
+        if debug_nopi is False:
             setup_temp_humid.dht22.trigger()
             time.sleep(3)
             temp = setup_temp_humid.dht22.temperature()
@@ -115,6 +116,8 @@ def get_temp_humid(db_table, freq):
         else:
             temp = 24.5
             humid = 50.5
+        if debug is True:
+            print('temperature humidity reading: time: %d temp: %f humid: %f' % (time.time(), temp, humid))
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' %
@@ -137,7 +140,7 @@ def get_soil_moisture(ch, db_table, freq):
         data = list()
         for i in ch:
             data_ch.append('CH%s' % i)
-            if debug is False:
+            if debug_nopi is False:
                 data.append(str(setup_soil_moisture.mcp.read_adc(int(i))))
             else:
                 data.append('888')
@@ -198,13 +201,20 @@ def graph(freq, host, port):
 
 # email sender
 def email(host, port, user, passw, from_addr, to_addr, subject, content, ch):
-    server = smtplib.SMTP(host, port)
-    server.starttls()
-    server.login(user, passw)
-    message = 'From: <%s>\nTo: <%s>\nMIME-Version: 1.0\nContext-type: text/html\nSubject: %s\n\n%s %s' \
-              % (from_addr, to_addr, subject, content, ch)
-    server.sendmail(from_addr, to_addr, message)
-    server.quit()
+    try:
+        server = smtplib.SMTP(host, port)
+        server.starttls()
+        server.login(user, passw)
+        message = 'From: <%s>\nTo: <%s>\nMIME-Version: 1.0\nContext-type: text/html\nSubject: %s\n\n%s %s' \
+                  % (from_addr, to_addr, subject, content, ch)
+        server.sendmail(from_addr, to_addr, message)
+        if debug is True:
+            print('email sent to %s from %s') % (from_addr, to_addr)
+        server.quit()
+    except smtplib.SMTPAuthenticationError as e:
+        print(e)
+    except Exception as e:
+        print('Check email host and port configuration: ' + str(e))
 
 
 # monitor soil moisture sensor(s)
@@ -221,11 +231,13 @@ def read_soil_moisture(ch, db_table, limit, freq, wet_trigger, dry_trigger):
         for i in data:
             for r in getattr(returned, i):
                 if r < wet_trigger:
-                    print(str(i) + ' wet')
+                    if debug is True:
+                        print(str(i) + ' is < wet trigger')
                     freq = int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK'])
                     he_protec[i] = False
                 elif r > dry_trigger:
-                    print(str(i) + ' dry')
+                    if debug is True:
+                        print(str(i) + ' is > dry trigger')
                     freq = 3
                     if he_protec[i] is False:
                         email(get_conf.conf['EMAIL']['HOST'], int(get_conf.conf['EMAIL']['PORT']),
@@ -234,7 +246,8 @@ def read_soil_moisture(ch, db_table, limit, freq, wet_trigger, dry_trigger):
                               get_conf.conf['EMAIL']['SUBJECT'], get_conf.conf['EMAIL']['MESSAGE'], i)
                     he_protec[i] = True
                 else:
-                    print(str(i) + ' okay')
+                    if debug is True:
+                        print(str(i) + ' is between the wet and dry trigger values')
         time.sleep(freq)
 
 
@@ -271,11 +284,11 @@ try:
     sql_db_connect(get_conf.conf['DB']['HOST'], get_conf.conf['DB']['USER'], get_conf.conf['DB']['PASSW'],
                    get_conf.conf['DB']['DB_NAME'], get_conf.conf['DB']['DB_TABLE_TEMP_HUMID'],
                    get_conf.conf['DB']['DB_TABLE_SOIL_MOISTURE'])
-except sql.err.OperationalError as e:
-    clorox(e)
+except sql.err.OperationalError as er:
+    clorox(er)
 
 # setup DHT22 sensor
-if debug is False:
+if debug_nopi is False:
     progress(3, 7, status='setup temperature & humidity sensor')
     try:
         setup_temp_humid(int(get_conf.conf['SENSOR']['TEMP_HUMID_GPIO']))
@@ -283,7 +296,7 @@ if debug is False:
         quit(print('TEMP_HUMID_GPIO must be a number - ' + str(er)))
 
 # setup soil moisture sensor(s)
-if debug is False:
+if debug_nopi is False:
     progress(4, 7, status='setup soil moisture sensor(s)')
     setup_soil_moisture(
         int(get_conf.conf['SENSOR']['SOIL_MOISTURE_SPI_PORT']),
