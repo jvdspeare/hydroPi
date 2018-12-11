@@ -69,9 +69,8 @@ def yes_no(question):
 
 
 # debug
-debug_nopi = yes_no('\ndebug no-pi?')
+debug_nopi = yes_no('\nno-pi mode?')
 debug = yes_no('debug?')
-calibrate = yes_no('calibrate?')
 
 
 # read config file
@@ -117,7 +116,7 @@ def get_temp_humid(db_table, freq):
             temp = 24.5
             humid = 50.5
         if debug is True:
-            print('temperature humidity reading: time: %d temp: %f humid: %f' % (time.time(), temp, humid))
+            print('temperature humidity reading, time: %d temp: %f humid: %f' % (time.time(), temp, humid))
         cursor = sql_db_connect.db.cursor()
         try:
             cursor.execute('INSERT INTO %s(TIME, TEMP, HUMID) VALUES (%d, %f, %f)' %
@@ -232,12 +231,12 @@ def read_soil_moisture(ch, db_table, limit, freq, wet_trigger, dry_trigger):
             for r in getattr(returned, i):
                 if r < wet_trigger:
                     if debug is True:
-                        print(str(i) + ' is < wet trigger')
+                        print(str(i) + ': ' + str(r) + ', < wet trigger level')
                     freq = int(get_conf.conf['SENSOR']['SOIL_MOISTURE_FREQ_CHECK'])
                     he_protec[i] = False
                 elif r > dry_trigger:
                     if debug is True:
-                        print(str(i) + ' is > dry trigger')
+                        print(str(i) + ': ' + str(r) + ', > dry trigger level')
                     freq = 3
                     if he_protec[i] is False:
                         email(get_conf.conf['EMAIL']['HOST'], int(get_conf.conf['EMAIL']['PORT']),
@@ -247,7 +246,7 @@ def read_soil_moisture(ch, db_table, limit, freq, wet_trigger, dry_trigger):
                     he_protec[i] = True
                 else:
                     if debug is True:
-                        print(str(i) + ' is between the wet and dry trigger values')
+                        print(str(i) + ': ' + str(r) + ', between the wet & dry trigger level')
         time.sleep(freq)
 
 
